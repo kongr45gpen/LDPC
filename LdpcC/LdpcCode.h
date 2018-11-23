@@ -6,6 +6,7 @@
 #define LDPCC_LDPCCODE_H
 
 #include <vector>
+#include <cstdint>
 
 class LdpcCode {
 

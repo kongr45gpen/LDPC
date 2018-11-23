@@ -6,6 +6,7 @@
 #define LDPCC_CONSTELLATION_H
 
 #include <vector>
+#include <cstdint>
 
 class Constellation {
 private:

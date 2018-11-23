@@ -3,13 +3,14 @@
 #include "Constellation.h"
 #include <random>
 #include <iomanip>      // std::setprecision
+#include <chrono>
 
 using namespace std;
 
 int main() {
 
     unsigned max_err = 250;
-    unsigned max_runs = 10000;
+    unsigned max_runs = 1000;
 
     bool min_sum = false;
 
@@ -17,7 +18,8 @@ int main() {
 
     LdpcCode ldpc_code(0, 0);
 
-    std::vector<unsigned> block_length_vec{648, 1296, 1944};
+//    std::vector<unsigned> block_length_vec{648, 1296, 1944};
+    std::vector<unsigned> block_length_vec{1296, 1296, 1296};
 
     std::vector<unsigned> constellations{1, 2, 3};
 
@@ -29,7 +31,6 @@ int main() {
     // Used to run EbNo points of interest as per the constellation used
     std::vector<double>  constellations_ebno_offset{0.0, 3.0, 7.0};
 
-    std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
     for (unsigned i_const = 0; i_const < constellations.size(); ++i_const ) {
 
@@ -46,6 +47,10 @@ int main() {
 
         for (unsigned i_block = 0; i_block < block_length_vec.size(); ++i_block) {
             unsigned block_length = block_length_vec.at(i_block);
+            std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+
+            uint64_t total_bits = 0;
+
             std::cout << "% Processing block length " << block_length << std::endl;
             for (unsigned i_rate = 0; i_rate < rate_index_vec.size(); ++i_rate) {
                 unsigned rate_index = rate_index_vec.at(i_rate) + rate_offset.at(i_const);
@@ -64,13 +69,13 @@ int main() {
                 std::default_random_engine generator;
 
                 for (unsigned run = 0; run < max_runs; ++run) {
-                    if ((run % (max_runs / 5)) == (max_runs / 5 - 1)) {
-                        std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+//                    if ((run % (max_runs / 5)) == (max_runs / 5 - 1)) {
+                      std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
                         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
                         std::cout << "% Running iteration " << run << "; time elapsed = " << duration / 1000 / 1000
                                   << " seconds"
                                           "; percent complete = " << (100 * run) / max_runs << "." << std::endl;
-                    }
+   //                 }
                     for (unsigned i = 0; i < block_length / n_bits; ++i) {
                         noise.at(i) = (double) gauss_dist(generator);
                     }
@@ -83,7 +88,9 @@ int main() {
                     for (unsigned i_bit = 0; i_bit < info_length; ++i_bit)
                         info_bits.at(i_bit) = (uint8_t) (rand() % 2);
 
+		    std::cout << "Encoding..." << std::endl;
                     std::vector<uint8_t> coded_bits = ldpc_code.encode(info_bits);
+	            std::cout << "Encoded" << std::endl;
 
                     std::vector<uint8_t> scrambled_bits(block_length, 0);
 
@@ -130,6 +137,7 @@ int main() {
                             llr.at(i_bit) = llr.at(i_bit) * (1 - 2 * scrambling_bits.at(i_bit));
 
                         std::vector<uint8_t> decoded_cw = ldpc_code.decode(llr, 20, min_sum);
+                        total_bits += info_length;
                         bool error = false;
                         for (unsigned i_bit = 0; i_bit < info_length; ++i_bit) {
                             if (decoded_cw.at(i_bit) != info_bits.at(i_bit)) {
@@ -163,6 +171,9 @@ int main() {
                     std::cout << std::endl;
                 }
                 std::cout << " ];" << std::endl;
+                std::chrono::high_resolution_clock::time_point tf = std::chrono::high_resolution_clock::now();
+                auto duration = std::chrono::duration_cast<std::chrono::microseconds>(tf - t1).count();
+                std::cout << "% Bits = " << total_bits << "; throughput = " << total_bits/(duration / 1000 / 1000) << std::endl;
 
             } // Rate loop end
 
@@ -170,8 +181,8 @@ int main() {
 
     } // Constellation loop end
 
-    std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-    std::cout << "% Total time taken = " << duration / 1000 / 1000 << " seconds." << std::endl;
+//     std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+//     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+//     std::cout << "% Total time taken = " << duration / 1000 / 1000 << " seconds." << std::endl;
     return 0;
 }
