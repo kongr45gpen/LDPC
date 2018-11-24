@@ -10,7 +10,7 @@ using namespace std;
 int main() {
 
     unsigned max_err = 250;
-    unsigned max_runs = 1000;
+    unsigned max_runs = 50;
 
     bool min_sum = false;
 
@@ -19,9 +19,10 @@ int main() {
     LdpcCode ldpc_code(0, 0);
 
 //    std::vector<unsigned> block_length_vec{648, 1296, 1944};
-    std::vector<unsigned> block_length_vec{1296, 1296, 1296};
+    std::vector<unsigned> block_length_vec{648, 1296, 1944};
 
-    std::vector<unsigned> constellations{1, 2, 3};
+//     std::vector<unsigned> constellations{1, 2, 3};
+    std::vector<unsigned> constellations{1};
 
     std::vector<unsigned> rate_index_vec{0, 1, 2};
 
@@ -47,8 +48,6 @@ int main() {
 
         for (unsigned i_block = 0; i_block < block_length_vec.size(); ++i_block) {
             unsigned block_length = block_length_vec.at(i_block);
-            std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-
             uint64_t total_bits = 0;
 
             std::cout << "% Processing block length " << block_length << std::endl;
@@ -57,6 +56,7 @@ int main() {
                 std::cout << "% Processing rate index " << rate_index << std::endl;
                 ldpc_code.load_wifi_ldpc(block_length, rate_index);
                 unsigned info_length = ldpc_code.get_info_length();
+                std::chrono::microseconds duration(0);
 
                 std::vector<double> bler(ebno_vec.size(), 0);
                 std::vector<double> num_err(ebno_vec.size(), 0);
@@ -70,9 +70,7 @@ int main() {
 
                 for (unsigned run = 0; run < max_runs; ++run) {
 //                    if ((run % (max_runs / 5)) == (max_runs / 5 - 1)) {
-                      std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-                        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-                        std::cout << "% Running iteration " << run << "; time elapsed = " << duration / 1000 / 1000
+                        std::cout << "% Running iteration " << run << "; time elapsed = " << duration.count()
                                   << " seconds"
                                           "; percent complete = " << (100 * run) / max_runs << "." << std::endl;
    //                 }
@@ -89,7 +87,14 @@ int main() {
                         info_bits.at(i_bit) = (uint8_t) (rand() % 2);
 
 		    std::cout << "Encoding..." << std::endl;
+                    std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+
                     std::vector<uint8_t> coded_bits = ldpc_code.encode(info_bits);
+
+
+                    std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+                    std::chrono::microseconds timenow = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
+                    duration += timenow;
 	            std::cout << "Encoded" << std::endl;
 
                     std::vector<uint8_t> scrambled_bits(block_length, 0);
@@ -172,8 +177,7 @@ int main() {
                 }
                 std::cout << " ];" << std::endl;
                 std::chrono::high_resolution_clock::time_point tf = std::chrono::high_resolution_clock::now();
-                auto duration = std::chrono::duration_cast<std::chrono::microseconds>(tf - t1).count();
-                std::cout << "% Bits = " << total_bits << "; throughput = " << total_bits/(duration / 1000 / 1000) << std::endl;
+                std::cout << "% Bits = " << total_bits << "; throughput = " << total_bits * 1000000.0/(duration.count()) << std::endl;
 
             } // Rate loop end
 

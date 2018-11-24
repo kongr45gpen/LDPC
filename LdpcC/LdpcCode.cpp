@@ -187,52 +187,52 @@ void LdpcCode::generate_compact_rep() {
         }
     }
 
-    std::cout << "const std::vector<std::vector<uint16_t>> _column_mat = {" << std::endl;
-    for (unsigned i_col = 0; i_col < _N; ++i_col) {
-        if (i_col != 0) {
-                std::cout << ",\n";
-            }
-        std::cout << "{";
-        for (unsigned i_row = 0; i_row < _column_mat.at(i_col).size(); ++i_row)
-        {
-            if (i_row != 0) {
-                std::cout << ",";
-            }
-            std::cout << _column_mat.at(i_col).at(i_row);
-        }
-        std::cout << "}";
-    }
-    std::cout << "};" << std::endl;
+//     std::cout << "const std::vector<std::vector<uint16_t>> _column_mat = {" << std::endl;
+//     for (unsigned i_col = 0; i_col < _N; ++i_col) {
+//         if (i_col != 0) {
+//                 std::cout << ",\n";
+//             }
+//         std::cout << "{";
+//         for (unsigned i_row = 0; i_row < _column_mat.at(i_col).size(); ++i_row)
+//         {
+//             if (i_row != 0) {
+//                 std::cout << ",";
+//             }
+//             std::cout << _column_mat.at(i_col).at(i_row);
+//         }
+//         std::cout << "}";
+//     }
+//     std::cout << "};" << std::endl;
+//
+//     std::cout << "const std::vector<std::vector<uint16_t>> _row_mat = {" << std::endl;
+//     for (unsigned i_col = 0; i_col < _M; ++i_col) {
+//         if (i_col != 0) {
+//                 std::cout << ",\n";
+//             }
+//         std::cout << "{";
+//         for (unsigned i_row = 0; i_row < _row_mat.at(i_col).size(); ++i_row)
+//         {
+//             if (i_row != 0) {
+//                 std::cout << ",";
+//             }
+//             std::cout << _row_mat.at(i_col).at(i_row);
+//         }
+//         std::cout << "}";
+//     }
+//     std::cout << "};" << std::endl;
 
-    std::cout << "const std::vector<std::vector<uint16_t>> _row_mat = {" << std::endl;
-    for (unsigned i_col = 0; i_col < _M; ++i_col) {
-        if (i_col != 0) {
-                std::cout << ",\n";
-            }
-        std::cout << "{";
-        for (unsigned i_row = 0; i_row < _row_mat.at(i_col).size(); ++i_row)
-        {
-            if (i_row != 0) {
-                std::cout << ",";
-            }
-            std::cout << _row_mat.at(i_col).at(i_row);
-        }
-        std::cout << "}";
-    }
-    std::cout << "};" << std::endl;
-
-    throw;
-    // for (unsigned i_row = 0; i_row < _N; ++i_row)
-    // {
-    //     for (unsigned i_col = 0; i_col < _M; ++i_col)
-    //     {
-    //         _colu if (_H_mat.at(i_col).at(i_row) == 1)
-    //         {
-    //             _column_mat.at(i_col).push_back(i_row);
-    //             _row_mat.at(i_row).push_back(i_col);
-    //         }
-    //     }
-    // }
+//    throw;
+//      for (unsigned i_row = 0; i_row < _N; ++i_row)
+//      {
+//          for (unsigned i_col = 0; i_col < _M; ++i_col)
+//          {
+//              if (_H_mat.at(i_col).at(i_row) == 1)
+//              {
+//                  _column_mat.at(i_col).push_back(i_row);
+//                  _row_mat.at(i_row).push_back(i_col);
+//              }
+//          }
+//      }
 }
 
 bool LdpcCode::check_codeword(std::vector<uint8_t> decoded_cw) {
