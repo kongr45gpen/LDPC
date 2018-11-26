@@ -24,7 +24,11 @@ private:
 
     void lifted_ldpc(std::vector<std::vector<int>> baseH);
 
-public:
+    std::vector<unsigned> startPoints;
+    std::vector<unsigned> stopPoints;
+
+  public:
+    void magic();
 
     void generate_gallagher_ldpc();
 
@@ -32,12 +36,14 @@ public:
 
     void load_wifi_ldpc(unsigned block_length, unsigned rate_index);
 
-    unsigned get_info_length() {return _K;};
+    unsigned get_info_length() { return _K; };
 
-    LdpcCode(unsigned block_length, unsigned info_length): _N(block_length), _K(info_length), _Z(0) {
+    LdpcCode(unsigned block_length, unsigned info_length) : _N(block_length), _K(info_length), _Z(0)
+    {
         _M = _N - _K;
         _H_mat.resize(_N);
-        for (unsigned j = 0; j < _N ; ++j ) {
+        for (unsigned j = 0; j < _N; ++j)
+        {
             _H_mat.at(j).resize(_M);
         }
     };

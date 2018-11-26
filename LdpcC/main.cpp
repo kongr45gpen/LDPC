@@ -85,8 +85,9 @@ int main() {
                     std::vector<uint8_t> info_bits(info_length, 0);
                     for (unsigned i_bit = 0; i_bit < info_length; ++i_bit)
                         info_bits.at(i_bit) = (uint8_t) (rand() % 2);
+                    ldpc_code.magic();
 
-		    std::cout << "Encoding..." << std::endl;
+                    std::cout << "Encoding..." << std::endl;
                     std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
                     std::vector<uint8_t> coded_bits = ldpc_code.encode(info_bits);
@@ -95,6 +96,7 @@ int main() {
                     std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
                     std::chrono::microseconds timenow = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
                     duration += timenow;
+                    total_bits += info_length;
 	            std::cout << "Encoded" << std::endl;
 
                     std::vector<uint8_t> scrambled_bits(block_length, 0);
@@ -136,12 +138,13 @@ int main() {
                         for (unsigned i = 0; i < block_length / n_bits; ++i) {
                             received_signal.at(i) = mod_sym.at(i) + std::sqrt(N_0) * noise.at(i);
                         }
-                        std::vector<double> llr = modulation.llr_compute(received_signal, N_0);
 
-                        for (unsigned i_bit = 0; i_bit < block_length; ++i_bit)
-                            llr.at(i_bit) = llr.at(i_bit) * (1 - 2 * scrambling_bits.at(i_bit));
+                       std::vector<double> llr = modulation.llr_compute(received_signal, N_0);
+                       for (unsigned i_bit = 0; i_bit < block_length; ++i_bit)
+                           llr.at(i_bit) = llr.at(i_bit) * (1 - 2 * scrambling_bits.at(i_bit));
+                       std::vector<uint8_t> decoded_cw = ldpc_code.decode(llr, 20, min_sum);
 
-                        std::vector<uint8_t> decoded_cw = ldpc_code.decode(llr, 20, min_sum);
+                        // std::vector<uint8_t> decoded_cw(block_length, 0);
                         total_bits += info_length;
                         bool error = false;
                         for (unsigned i_bit = 0; i_bit < info_length; ++i_bit) {

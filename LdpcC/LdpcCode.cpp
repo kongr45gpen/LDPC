@@ -44,6 +44,31 @@ void LdpcCode::generate_gallagher_ldpc() {
     generate_compact_rep();
 }
 
+void LdpcCode::magic() {
+    startPoints = std::vector<unsigned>(_M, 0);
+    stopPoints = std::vector<unsigned>(_M, 0);
+
+    for(unsigned i_row = 0; i_row < _M; ++i_row) {
+        size_t size = _row_mat[i_row].size();
+
+        unsigned i_col = 0;
+        startPoints[i_row] = stopPoints[i_row] = size;
+        for (i_col = 0; i_col < size; ++i_col)
+        {
+            if (_row_mat[i_row][i_col] >= _K) {
+                startPoints[i_row] = i_col;
+                break;
+            }
+        }
+        for (i_col = 0; i_col < size; ++i_col)
+        {
+            if (_row_mat[i_row][i_col] >= _K + _Z) {
+                stopPoints[i_row] = i_col;
+                break;
+            }
+        }
+    }
+}
 
 std::vector<uint8_t> LdpcCode::encode(std::vector<uint8_t> info_bits) {
     // Does encoding by back substitution
@@ -53,39 +78,41 @@ std::vector<uint8_t> LdpcCode::encode(std::vector<uint8_t> info_bits) {
 
     std::vector<uint8_t > parity(_M, 0);
 
+
+
     for(unsigned i_row = 0; i_row < _M; ++i_row) {
-        for(unsigned i_col = 0; i_col < _row_mat.at(i_row).size(); ++i_col) {
-            if (_row_mat.at(i_row).at(i_col) < _K)
-                parity.at(i_row) += codeword.at(_row_mat.at(i_row).at(i_col));
+        unsigned i_col = 0;
+        unsigned start = startPoints[i_row];
+        for (i_col = 0; i_col < start; ++i_col)
+        {
+                parity[i_row] ^= codeword[_row_mat[i_row][i_col]];
         }
-        parity.at(i_row) = (uint8_t) (parity.at(i_row) % 2);
     }
 
     for (unsigned i_col = 0; i_col < _Z; ++i_col) {
         for (unsigned i_row = i_col; i_row < _M; i_row = i_row + _Z) {
-            codeword.at(_K + i_col) += parity.at(i_row);
+            codeword[_K + i_col] ^= parity[i_row];
         }
-        codeword.at(_K + i_col) = (uint8_t ) (codeword.at(_K + i_col) % 2);
     }
 
     for(unsigned i_row = 0; i_row < _M; ++i_row) {
-        for(unsigned i_col = 0; i_col < _row_mat.at(i_row).size(); ++i_col) {
-            if ((_row_mat.at(i_row).at(i_col) >= _K) && (_row_mat.at(i_row).at(i_col) < _K + _Z))
-                parity.at(i_row) += codeword.at(_row_mat.at(i_row).at(i_col));
+        unsigned i_col;
+        unsigned stop = stopPoints[i_row];
+        for (i_col = startPoints[i_row]; i_col < stop; ++i_col)
+        {
+                parity[i_row] ^= codeword[_row_mat[i_row][i_col]];
         }
-        parity.at(i_row) = (uint8_t) (parity.at(i_row) % 2);
     }
 
 
     for (unsigned i_col = _K + _Z; i_col < _N; i_col = i_col + _Z  ) {
         for (unsigned i_row = 0; i_row < _Z; ++i_row) {
-            codeword.at(i_col + i_row) = parity.at(i_col + i_row - _K - _Z);
-            parity.at(i_col + i_row - _K ) = (uint8_t) (( parity.at(i_col + i_row - _K) + parity.at(i_col + i_row - _K - _Z)) %2);
+            codeword[i_col + i_row] = parity[i_col + i_row - _K - _Z];
+            parity[i_col + i_row - _K ] = (uint8_t) (( parity[i_col + i_row - _K] ^ parity[i_col + i_row - _K - _Z]));
          }
     }
 
     return codeword;
-
 }
 
 std::vector<uint8_t> LdpcCode::decode(std::vector<double> llr_vec, unsigned max_iter, bool min_sum) {
@@ -187,39 +214,39 @@ void LdpcCode::generate_compact_rep() {
         }
     }
 
-//     std::cout << "const std::vector<std::vector<uint16_t>> _column_mat = {" << std::endl;
-//     for (unsigned i_col = 0; i_col < _N; ++i_col) {
-//         if (i_col != 0) {
-//                 std::cout << ",\n";
-//             }
-//         std::cout << "{";
-//         for (unsigned i_row = 0; i_row < _column_mat.at(i_col).size(); ++i_row)
-//         {
-//             if (i_row != 0) {
-//                 std::cout << ",";
-//             }
-//             std::cout << _column_mat.at(i_col).at(i_row);
-//         }
-//         std::cout << "}";
-//     }
-//     std::cout << "};" << std::endl;
-//
-//     std::cout << "const std::vector<std::vector<uint16_t>> _row_mat = {" << std::endl;
-//     for (unsigned i_col = 0; i_col < _M; ++i_col) {
-//         if (i_col != 0) {
-//                 std::cout << ",\n";
-//             }
-//         std::cout << "{";
-//         for (unsigned i_row = 0; i_row < _row_mat.at(i_col).size(); ++i_row)
-//         {
-//             if (i_row != 0) {
-//                 std::cout << ",";
-//             }
-//             std::cout << _row_mat.at(i_col).at(i_row);
-//         }
-//         std::cout << "}";
-//     }
-//     std::cout << "};" << std::endl;
+    // std::cout << "const std::vector<std::vector<uint16_t>> _column_mat = {" << std::endl;
+    // for (unsigned i_col = 0; i_col < _N; ++i_col) {
+    //     if (i_col != 0) {
+    //             std::cout << ",\n";
+    //         }
+    //     std::cout << "{";
+    //     for (unsigned i_row = 0; i_row < _column_mat.at(i_col).size(); ++i_row)
+    //     {
+    //         if (i_row != 0) {
+    //             std::cout << ",";
+    //         }
+    //         std::cout << _column_mat.at(i_col).at(i_row);
+    //     }
+    //     std::cout << "}";
+    // }
+    // std::cout << "};" << std::endl;
+
+    // std::cout << "const std::vector<std::vector<uint16_t>> _row_mat = {" << std::endl;
+    // for (unsigned i_col = 0; i_col < _M; ++i_col) {
+    //     if (i_col != 0) {
+    //             std::cout << ",\n";
+    //         }
+    //     std::cout << "{";
+    //     for (unsigned i_row = 0; i_row < _row_mat.at(i_col).size(); ++i_row)
+    //     {
+    //         if (i_row != 0) {
+    //             std::cout << ",";
+    //         }
+    //         std::cout << _row_mat.at(i_col).at(i_row);
+    //     }
+    //     std::cout << "}";
+    // }
+    // std::cout << "};" << std::endl;
 
 //    throw;
 //      for (unsigned i_row = 0; i_row < _N; ++i_row)
